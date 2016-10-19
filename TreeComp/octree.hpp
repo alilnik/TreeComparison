@@ -39,6 +39,8 @@ public:
     ~octree_node();
     virtual bool is_leaf();
     virtual void put(point p, T obj);
+    T at(point p);
+    int size();
 };
 
 
@@ -189,6 +191,42 @@ int octree_node<T>::get_child_id(point p)
     return result;
 }
 
+
+template <typename T>
+T octree_node<T>::at(point p)
+{
+    if (this->is_leaf_node)
+    {
+        for (int i = 0; i < objects->size(); i++)
+            if (p.equals(possitions->at(i)))
+                return objects->at(i);
+    }
+    else
+    {
+        int idx = get_child_id(p);
+        return children[idx]->at(p);
+    }
+    return NULL;
+}
+
+template <typename T>
+int octree_node<T>::size()
+{
+    if (this->is_leaf_node)
+    {
+        return objects->size();
+    }
+    else
+    {
+        int sum = 0;
+        for (int i = 0; i < 8; i++)
+        {
+            sum += children[i]->size();
+        }
+        return sum;
+    }
+    return -1;
+}
 
 
 template <typename T>

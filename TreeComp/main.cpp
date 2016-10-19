@@ -11,6 +11,8 @@
 #include "spatial_tree.hpp"
 #include "octree.hpp"
 
+bool test_octree_insert();
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     std::cout << "Hello, World!\n";
@@ -20,6 +22,8 @@ int main(int argc, const char * argv[]) {
     tree->put(point(0.1, 0.2, 0.3), 0.123);
     tree->put(point(0.9, 0.2, 0.3), 0.923);
     tree->put(point(0.8, 0.2, 0.3), 0.823);
+    
+    test_octree_insert();
     
     return 0;
 }
