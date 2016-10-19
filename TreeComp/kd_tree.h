@@ -4,6 +4,7 @@
 
 #ifndef kd_tree_
 #define kd_tree_hpp
+
 #include <vector>
 #include <algorithm>
 #include "spatial_tree.hpp"
