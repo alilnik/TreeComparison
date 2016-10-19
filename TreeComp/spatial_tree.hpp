@@ -12,6 +12,7 @@
 #include <vector>
 #include <utility>
 #include "utils.hpp"
+#include <stdio.h>
 
 using std::vector;
 using std::pair;

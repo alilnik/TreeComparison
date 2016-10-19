@@ -22,7 +22,7 @@ private:
     bool is_leaf_node;
     octree_node<T> * children[8];
     vector<T> * objects;
-    vector<point> * possitions;
+    vector<point> * positions;
     int max_depth;
     int max_amount_of_objects;
     
@@ -60,7 +60,7 @@ octree_node<T>::octree_node(bound bnd, int max_depth, int max_amount_of_objects)
     for (int i = 0; i < 8; i++)
         children[i] = nullptr;
     objects = new vector<T>();
-    possitions = new vector<point>();
+    positions = new vector<point>();
     is_leaf_node = true;
 }
 
@@ -80,10 +80,10 @@ octree_node<T>::~octree_node()
         delete objects;
         objects = nullptr;
     }
-    if (possitions != nullptr)
+    if (positions != nullptr)
     {
-        delete possitions;
-        possitions = nullptr;
+        delete positions;
+        positions = nullptr;
     }
 }
 
@@ -103,7 +103,7 @@ void octree_node<T>::put(point p, T obj)
         if (objects->size() < max_amount_of_objects || (max_depth == 0))
         {
             objects->push_back(obj);
-            possitions->push_back(p);
+            positions->push_back(p);
         } else {
             // Split
             split();
@@ -152,13 +152,13 @@ void octree_node<T>::split()
     
     for (int i = 0; i < objects->size(); i++)
     {
-        int idx = get_child_id(possitions->at(i));
-        children[idx]->put(possitions->at(i), objects->at(i));
+        int idx = get_child_id(positions->at(i));
+        children[idx]->put(positions->at(i), objects->at(i));
     }
     delete objects;
-    delete possitions;
+    delete positions;
     objects = nullptr;
-    possitions = nullptr;
+    positions = nullptr;
     this->is_leaf_node = false;
 }
 
@@ -198,7 +198,7 @@ T octree_node<T>::at(point p)
     if (this->is_leaf_node)
     {
         for (int i = 0; i < objects->size(); i++)
-            if (p.equals(possitions->at(i)))
+            if (p.equals(positions->at(i)))
                 return objects->at(i);
     }
     else

@@ -14,8 +14,7 @@
 bool test_octree_insert();
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
+
     spatial_tree_node<double> * tree;
     tree = new octree_node<double>(bound(0, 0, 0, 1, 1, 1), 10, 2);
     

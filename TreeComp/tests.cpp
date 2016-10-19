@@ -18,7 +18,7 @@ bool test_octree_insert()
     int * objects;
     point * possitions;
     
-    int size = 20000000;
+    int size = 1000;
     
     objects = new int[size];
     possitions = new point[size];
