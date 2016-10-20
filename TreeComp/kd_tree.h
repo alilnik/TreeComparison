@@ -208,6 +208,7 @@ double kd_tree_node<T>::calulate_volume() {
     return (bnd.nrt.x-bnd.flb.x)*(bnd.nrt.y-bnd.flb.y)*(bnd.nrt.z-bnd.flb.z);
 }
 
+//TODO: change coordiates
 /**
  * gets median of the box on X parameter. To be considered
  * @return
