@@ -24,7 +24,14 @@ protected:
     bound bnd;
 private:
     virtual spatial_tree_node<T> ** get_children() = 0;
-    virtual vector<T> * get_objects() = 0;
+    virtual int get_children_size() = 0;
+    virtual vector<pair<point, T> > * get_objects() = 0;
+    
+    static void get_neighbors_(
+                               spatial_tree_node<T> * A,
+                               spatial_tree_node<T> * B, 
+                               double distance,
+                               vector<pair<pair<point, T>, pair<point, T> > > * result);
     
 public:
     
@@ -35,7 +42,7 @@ public:
     virtual void put(point p, T obj) = 0;
     
     
-    vector<pair<T *, T *> > get_neighbors();
+    vector<pair<pair<point, T>, pair<point, T> > > get_neighbors(double distance);
 };
 
 template <typename T>
@@ -45,9 +52,106 @@ bound spatial_tree_node<T>::get_bound()
 }
 
 template <typename T>
-vector<pair<T *, T *> > spatial_tree_node<T>::get_neighbors()
+vector<pair<pair<point, T>, pair<point, T> > > spatial_tree_node<T>::get_neighbors(double distance)
 {
-    return vector<pair<T *, T *> >();
+    vector<pair<pair<point, T>, pair<point, T> > > result;
+    get_neighbors_(this, this, distance, &result);
+    return result;
+}
+
+
+template <typename T>
+pair<pair<point, T>, pair<point, T> > make_neighbor_pair(point p1, T o1, point p2, T o2)
+{
+    return make_pair(make_pair(p1, o1), make_pair(p2, o2));
+}
+
+
+template <typename T>
+pair<pair<point, T>, pair<point, T> > make_neighbor_pair(pair<point, T> p1, pair<point ,T> p2)
+{
+    return make_pair(make_pair(p1.first, p1.second), make_pair(p2.first, p2.second));
+}
+
+
+template <typename T>
+void spatial_tree_node<T>::get_neighbors_(
+                                                         spatial_tree_node<T> * A,
+                                                         spatial_tree_node<T> * B,
+                                                         double distance,
+                                                         vector<pair<pair<point, T>, pair<point, T> > > * result)
+{
+    if (A->is_leaf() && B->is_leaf())
+    {
+        if (A == B)
+        {
+            auto a_objs = A->get_objects();
+            
+            for (int i = 0; i < a_objs->size(); i++)
+                for (int j = i + 1; j < a_objs->size(); j++)
+                    if ((a_objs->at(i).first).distance(a_objs->at(j).first))
+                        result->push_back(make_neighbor_pair(a_objs->at(i), a_objs->at(j)));
+        }
+        else
+        {
+            auto a_objs = A->get_objects();
+            auto b_objs = B->get_objects();
+            
+            for (int i = 0; i < a_objs->size(); i++)
+                for (int j = 0; j < b_objs->size(); j++)
+                    if ((a_objs->at(i).first).distance(b_objs->at(j).first))
+                        result->push_back(make_neighbor_pair(a_objs->at(i), b_objs->at(j)));
+        }
+    }
+    else
+    {
+        spatial_tree_node<T> ** a_nodes, ** b_nodes;
+        bool a_allocated = false, b_allocated = false;
+        int a_size = 0, b_size = 0;
+        if (A->is_leaf())
+        {
+            a_nodes = new spatial_tree_node<T>*[1];
+            a_nodes[0] = A;
+            a_size = 1;
+            a_allocated = true;
+        }
+        else
+        {
+            a_nodes = A->get_children();
+            a_size = A->get_children_size();
+        }
+        
+        if (B->is_leaf())
+        {
+            b_nodes = new spatial_tree_node<T>*[1];
+            b_nodes[0] = B;
+            b_size = 1;
+            b_allocated = true;
+        }
+        else
+        {
+            b_nodes = B->get_children();
+            b_size = B->get_children_size();
+        }
+        
+        for (int i = 0; i < a_size; i++)
+        {
+            for (int j = 0; j < b_size; j++)
+            {
+                if (a_nodes[i]->get_bound().distance(b_nodes[j]->get_bound()) <= distance)
+                {
+                    get_neighbors_(a_nodes[i], b_nodes[j], distance, result);
+                }
+            }
+        }
+        
+        if (a_allocated)
+            delete[] a_nodes;
+        
+        if (b_allocated)
+            delete[] b_nodes;
+        
+    }
 }
 
 #endif /* spatial_tree_hpp */
