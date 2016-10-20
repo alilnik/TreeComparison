@@ -14,6 +14,7 @@
 #include "spatial_tree.hpp"
 
 using std::vector;
+using std::make_pair;
 
 template <typename T>
 class octree_node: public spatial_tree_node<T>
@@ -21,8 +22,7 @@ class octree_node: public spatial_tree_node<T>
 private:
     bool is_leaf_node;
     octree_node<T> * children[8];
-    vector<T> * objects;
-    vector<point> * possitions;
+    vector<pair<point, T> > * objects;
     int max_depth;
     int max_amount_of_objects;
     
@@ -30,7 +30,8 @@ private:
     int get_child_id(point p);
     
     virtual spatial_tree_node<T> ** get_children();
-    virtual vector<T> * get_objects();
+    virtual vector<pair<point, T> > * get_objects();
+    virtual int get_children_size();
     
     
 public:
@@ -59,8 +60,10 @@ octree_node<T>::octree_node(bound bnd, int max_depth, int max_amount_of_objects)
     this->max_amount_of_objects = max_amount_of_objects;
     for (int i = 0; i < 8; i++)
         children[i] = nullptr;
-    objects = new vector<T>();
-    possitions = new vector<point>();
+    objects = new vector<pair<point, T> >();
+    
+    //objects->reserve(max_amount_of_objects);
+    
     is_leaf_node = true;
 }
 
@@ -80,11 +83,6 @@ octree_node<T>::~octree_node()
         delete objects;
         objects = nullptr;
     }
-    if (possitions != nullptr)
-    {
-        delete possitions;
-        possitions = nullptr;
-    }
 }
 
 template <typename T>
@@ -102,8 +100,7 @@ void octree_node<T>::put(point p, T obj)
         // Insert
         if (objects->size() < max_amount_of_objects || (max_depth == 0))
         {
-            objects->push_back(obj);
-            possitions->push_back(p);
+            objects->push_back(make_pair(p, obj));
         } else {
             // Split
             split();
@@ -152,13 +149,11 @@ void octree_node<T>::split()
     
     for (int i = 0; i < objects->size(); i++)
     {
-        int idx = get_child_id(possitions->at(i));
-        children[idx]->put(possitions->at(i), objects->at(i));
+        int idx = get_child_id(objects->at(i).first);
+        children[idx]->put(objects->at(i).first, objects->at(i).second);
     }
     delete objects;
-    delete possitions;
     objects = nullptr;
-    possitions = nullptr;
     this->is_leaf_node = false;
 }
 
@@ -198,8 +193,8 @@ T octree_node<T>::at(point p)
     if (this->is_leaf_node)
     {
         for (int i = 0; i < objects->size(); i++)
-            if (p.equals(possitions->at(i)))
-                return objects->at(i);
+            if (p.equals(objects->at(i).first))
+                return objects->at(i).second;
     }
     else
     {
@@ -214,7 +209,7 @@ int octree_node<T>::size()
 {
     if (this->is_leaf_node)
     {
-        return objects->size();
+        return (int) objects->size();
     }
     else
     {
@@ -237,9 +232,18 @@ spatial_tree_node<T> ** octree_node<T>::get_children()
 
 
 template <typename T>
-vector<T> * octree_node<T>::get_objects()
+vector<pair<point, T> > * octree_node<T>::get_objects()
 {
     return this->objects;
+}
+
+
+template <typename T>
+int octree_node<T>::get_children_size()
+{
+    if (!is_leaf())
+        return 8;
+    return 0;
 }
 
 #endif /* octree_hpp */
