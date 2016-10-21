@@ -12,9 +12,11 @@
 #include "octree.hpp"
 
 bool test_octree_insert();
+bool test_kd_tree_insert();
 
 int main(int argc, const char * argv[]) {
 
+    /*
     spatial_tree_node<double> * tree;
     tree = new octree_node<double>(bound(0, 0, 0, 1, 1, 1), 10, 2);
     
@@ -22,7 +24,9 @@ int main(int argc, const char * argv[]) {
     tree->put(point(0.9, 0.2, 0.3), 0.923);
     tree->put(point(0.8, 0.2, 0.3), 0.823);
     
-    test_octree_insert();
+    test_octree_insert();*/
+
+    test_kd_tree_insert();
     
     return 0;
 }

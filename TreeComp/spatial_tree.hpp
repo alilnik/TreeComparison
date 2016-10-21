@@ -76,10 +76,10 @@ pair<pair<point, T>, pair<point, T> > make_neighbor_pair(pair<point, T> p1, pair
 
 template <typename T>
 void spatial_tree_node<T>::get_neighbors_(
-                                                         spatial_tree_node<T> * A,
-                                                         spatial_tree_node<T> * B,
-                                                         double distance,
-                                                         vector<pair<pair<point, T>, pair<point, T> > > * result)
+                                            spatial_tree_node<T> * A,
+                                            spatial_tree_node<T> * B,
+                                            double distance,
+                                            vector<pair<pair<point, T>, pair<point, T> > > * result)
 {
     if (A->is_leaf() && B->is_leaf())
     {

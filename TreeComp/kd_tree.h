@@ -21,9 +21,9 @@ class kd_tree_node: public spatial_tree_node<T>
 private:
     bool is_leaf_node;
     kd_tree_node<T>* children[2];
-    vector<T>* objects;
+    vector<pair<point, T> > * objects;
     int max_amount_of_objects;
-    vector<point> * positions;
+    //vector<point> * positions;
     void split();
     int get_child_id(point p);
     virtual spatial_tree_node<T> ** get_children();
@@ -65,8 +65,7 @@ kd_tree_node<T>::kd_tree_node(bound bnd, int max_depth, int max_amount_of_object
     this->max_amount_of_objects = max_amount_of_objects;
     for (int i = 0; i < 8; i++)
         children[i] = nullptr;
-    objects = new vector<T>();
-    positions = new vector<point>();
+    objects = new vector<pair<point, T> >();
     is_leaf_node = true;
 }
 
@@ -85,11 +84,6 @@ kd_tree_node<T>::~kd_tree_node()
         delete objects;
         objects = nullptr;
     }
-    if (positions != nullptr)
-    {
-        delete positions;
-        positions = nullptr;
-    }
 }
 
 /**
@@ -105,8 +99,8 @@ void kd_tree_node<T>::put(point p, T obj)
         // Insert
         if (objects->size() < max_amount_of_objects || (max_depth == 0))
         {
-            objects->push_back(obj);
-            positions->push_back(p);
+            objects->push_back(make_pair(p, obj));
+
         } else {
             // Split
             split();
@@ -125,7 +119,6 @@ void kd_tree_node<T>::split()
     if (!this->is_leaf_node)
         return;
     point median = get_median();
-
     point p[2] = {
         point(bnd.flb.x, bnd.flb.y, bnd.flb.z),
         point(median.x, bnd.flb.y, bnd.flb.z),
@@ -146,14 +139,13 @@ void kd_tree_node<T>::split()
 
     for (int i = 0; i < objects->size(); i++)
     {
-        int idx = get_child_id(positions->at(i));
-        children[idx]->put(positions->at(i), objects->at(i));
+        int idx = get_child_id(objects->at(i).first);
+        children[idx]->put(objects->at(i).first, objects->at(i).second);
     }
     delete objects;
-    delete positions;
     objects = nullptr;
-    positions = nullptr;
     this->is_leaf_node = false;
+
 }
 
 /**
@@ -165,30 +157,31 @@ void kd_tree_node<T>::split()
 template <typename T>
 int kd_tree_node<T>::calculate_sah(int axis, int num)
 {
-    int sah = 0;
-    int split_coordinate, volume_l, volume_r, count_l, cout_r = 0;
+    double sah = 0;
+    double split_coordinate, volume_l, volume_r, count_l, cout_r = 0;
 
     volume_l = 1/N*volume;
     volume_r = volume - volume_r;
 
+
     if (axis == 0){
         split_coordinate = 1/N*(bnd.flb.x+bnd.nrt.x);
-        for(auto &i: *positions){
-            if(i.x>=split_coordinate) cout_r++;
+        for(pair<point, T> &i: *objects){
+            if(i.first.x>=split_coordinate) cout_r++;
             else count_l++;
         }
     }
     else if(axis == 1){
         split_coordinate = 1/N*(bnd.flb.y+bnd.nrt.y);
-        for(auto &i: *positions){
-            if(i.y>=split_coordinate) cout_r++;
+        for(pair<point, T> &i: *objects){
+            if(i.first.y>=split_coordinate) cout_r++;
             else count_l++;
         }
     }
     else if(axis == 2){
         split_coordinate = 1/N*(bnd.flb.z+bnd.nrt.z);
-        for(auto &i: *positions){
-            if(i.z>=split_coordinate) cout_r++;
+        for(pair<point, T> &i: *objects){
+            if(i.first.z>=split_coordinate) cout_r++;
             else count_l++;
         }
     }
@@ -212,14 +205,16 @@ double kd_tree_node<T>::calulate_volume() {
  * gets median of the box on X parameter. To be considered
  * @return
  */
+template <typename T>
 point kd_tree_node::get_median() {
-    vector<point> * sorted = positions;
-    std::sort(sorted->begin(), sorted->end(),point_compare);
+    vector<pair<point, T> > * sorted = objects;
+    std::sort(sorted->begin(), sorted->end(), point_compare);
     return sorted->[sorted->size()/2];
 }
 
 //little comparator for points
-bool point_compare (point x, point y) { return (x.x<y.x); }
+template <typename T>
+bool point_compare (pair<point, T> x, pair<point, T> y) { return (x.first.x<y.first.x); }
 
 
 #endif //SPATIAL_TREE_COMPARISON_KD_TREE_H
