@@ -55,7 +55,7 @@ template <typename T>
 vector<pair<pair<point, T>, pair<point, T> > > spatial_tree_node<T>::get_neighbors(double distance)
 {
     vector<pair<pair<point, T>, pair<point, T> > > result;
-    get_neighbors_(this, this, distance, &result);
+    get_neighbors_(this, this, distance * distance, &result);
     return result;
 }
 
@@ -83,25 +83,15 @@ void spatial_tree_node<T>::get_neighbors_(
 {
     if (A->is_leaf() && B->is_leaf())
     {
-        if (A == B)
-        {
-            auto a_objs = A->get_objects();
-            
-            for (int i = 0; i < a_objs->size(); i++)
-                for (int j = i + 1; j < a_objs->size(); j++)
-                    if ((a_objs->at(i).first).distance(a_objs->at(j).first))
-                        result->push_back(make_neighbor_pair(a_objs->at(i), a_objs->at(j)));
-        }
-        else
-        {
-            auto a_objs = A->get_objects();
-            auto b_objs = B->get_objects();
-            
-            for (int i = 0; i < a_objs->size(); i++)
-                for (int j = 0; j < b_objs->size(); j++)
-                    if ((a_objs->at(i).first).distance(b_objs->at(j).first))
-                        result->push_back(make_neighbor_pair(a_objs->at(i), b_objs->at(j)));
-        }
+        auto a_objs = A->get_objects();
+        auto b_objs = B->get_objects();
+        
+        bool is_same = A == B;
+        
+        for (int i = 0; i < a_objs->size(); i++)
+            for (int j = is_same ? (i + 1) : 0; j < b_objs->size(); j++)
+                if ((a_objs->at(i).first).sqdist(b_objs->at(j).first) <= distance)
+                    result->push_back(make_neighbor_pair(a_objs->at(i), b_objs->at(j)));
     }
     else
     {
@@ -134,9 +124,10 @@ void spatial_tree_node<T>::get_neighbors_(
             b_size = B->get_children_size();
         }
         
+        bool is_same = A == B;
         for (int i = 0; i < a_size; i++)
         {
-            for (int j = 0; j < b_size; j++)
+            for (int j = is_same ? (i) : 0; j < b_size; j++)
             {
                 if (a_nodes[i]->get_bound().distance(b_nodes[j]->get_bound()) <= distance)
                 {

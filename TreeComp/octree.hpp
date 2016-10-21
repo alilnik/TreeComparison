@@ -10,6 +10,7 @@
 #define octree_hpp
 
 #include <vector>
+#include <cstdio>
 
 #include "spatial_tree.hpp"
 
@@ -144,6 +145,8 @@ void octree_node<T>::split()
     
     for (int i = 0; i < 8; i++)
     {
+        if (e[i].z == p[i].z)
+            printf("!");
         children[i] = new octree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
     }
     
