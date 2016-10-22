@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include "octree.hpp"
+#include "kd_tree.h"
 
 using std::vector;
 
@@ -118,7 +119,9 @@ bool test_kd_tree_insert(){
     }
 
     std::random_shuffle(ints, ints + size);
-    kd_tree_node<int> kd(bound(0, 0, 0, 1, 1, 1), 10, 100);
+    kd_tree_node<int> kd(bound(0, 0, 0, 1, 1, 1), 10, 10);
+    point* median = new point(0.5, 0, 0);
+    kd.median = *median;
 
     time = clock();
     for (int i = 0; i < size; i++)

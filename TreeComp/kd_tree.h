@@ -2,7 +2,7 @@
 // Created by Ilya Dmitrenok on 19.10.16.
 //
 
-#ifndef kd_tree_
+#ifndef kd_tree_hpp
 #define kd_tree_hpp
 
 #include <vector>
@@ -26,9 +26,9 @@ private:
     //vector<point> * positions;
     void split();
     int get_child_id(point p);
+    virtual int get_children_size();
     virtual spatial_tree_node<T> ** get_children();
-    virtual vector<T> * get_objects();
-
+    virtual vector<pair<point, T> > * get_objects();
     /**
      * Added this functions and vars for kd tree purpose
      */
@@ -48,6 +48,12 @@ public:
     virtual void put(point p, T obj);
     T at(point p);
     int size();
+    point median;
+
+    //little comparator for points
+
+    static bool point_compare (const pair<point, T> x, const pair<point, T> y) { return (x.first.x<y.first.x); }
+
 };
 
 template <typename T>
@@ -63,7 +69,7 @@ kd_tree_node<T>::kd_tree_node(bound bnd, int max_depth, int max_amount_of_object
     this->is_leaf_node = true;
     this->max_depth = max_depth;
     this->max_amount_of_objects = max_amount_of_objects;
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 2; i++)
         children[i] = nullptr;
     objects = new vector<pair<point, T> >();
     is_leaf_node = true;
@@ -116,6 +122,7 @@ void kd_tree_node<T>::put(point p, T obj)
 template <typename T>
 void kd_tree_node<T>::split()
 {
+    bound bnd = this->bnd;
     if (!this->is_leaf_node)
         return;
     point median = get_median();
@@ -148,6 +155,43 @@ void kd_tree_node<T>::split()
 
 }
 
+template <typename T>
+spatial_tree_node<T> ** kd_tree_node<T>::get_children()
+{
+    return (spatial_tree_node<T> **) children;
+}
+
+template <typename T>
+vector<pair<point, T> > * kd_tree_node<T>::get_objects()
+{
+    return this->objects;
+}
+
+template <typename T>
+int kd_tree_node<T>::get_children_size()
+{
+    if (!is_leaf())
+        return 2;
+    return 0;
+}
+
+
+
+template <typename T>
+int kd_tree_node<T>::get_child_id(point p)
+{
+
+    if (p.x > this->median.x) return 1;
+    else return  0;
+}
+
+template <typename T>
+bool kd_tree_node<T>::is_leaf()
+{
+    return is_leaf_node;
+}
+
+
 /**
  *
  * @param axis - on what axis are we separating: x=0,y=1,z=2
@@ -159,6 +203,7 @@ int kd_tree_node<T>::calculate_sah(int axis, int num)
 {
     double sah = 0;
     double split_coordinate, volume_l, volume_r, count_l, cout_r = 0;
+    bound bnd = this->bnd;
 
     volume_l = 1/N*volume;
     volume_r = volume - volume_r;
@@ -192,29 +237,29 @@ int kd_tree_node<T>::calculate_sah(int axis, int num)
     return sah;
 }
 
+
+
 /**
  * calculates volume of the box
  * @return volume
  */
 template <typename T>
 double kd_tree_node<T>::calulate_volume() {
-    return (bnd.nrt.x-bnd.flb.x)*(bnd.nrt.y-bnd.flb.y)*(bnd.nrt.z-bnd.flb.z);
+    return (this->bnd.nrt.x-this->bnd.flb.x)*(this->bnd.nrt.y-this->bnd.flb.y)*(this->bnd.nrt.z-this->bnd.flb.z);
 }
+
 
 /**
  * gets median of the box on X parameter. To be considered
  * @return
  */
 template <typename T>
-point kd_tree_node::get_median() {
-    vector<pair<point, T> > * sorted = objects;
+point kd_tree_node<T>::get_median() {
+    vector<pair<point, T> > * sorted = this->objects;
     std::sort(sorted->begin(), sorted->end(), point_compare);
-    return sorted->[sorted->size()/2];
+    this->median = sorted->at(sorted->size()/2).first;
+    return sorted->at(sorted->size()/2).first;
 }
-
-//little comparator for points
-template <typename T>
-bool point_compare (pair<point, T> x, pair<point, T> y) { return (x.first.x<y.first.x); }
 
 
 #endif //SPATIAL_TREE_COMPARISON_KD_TREE_H
