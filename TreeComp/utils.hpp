@@ -15,9 +15,11 @@
 using std::pair;
 using std::make_pair;
 
+double const eps = 10e-20;
+
 class point {
 private:
-    double const eps = 10e-20;
+    
     
 public:
     double x, y, z;
@@ -101,6 +103,38 @@ struct bound
     
     bound(point p1, point p2) : flb(p1), nrt(p2) {}
     
+    double volume()
+    {
+        return (near() - far()) * (right() - left()) * (top() - bottom());
+    }
+    
+    bool has(point p)
+    {
+        return is_between(p.x, far(), near()) && is_between(p.y, left(), right()) && is_between(p.z, bottom(), top());
+    }
+    
+    bound add_point(point p)
+    {
+        bound new_bnd(fmin(p.x, far()), fmin(p.y, left()), fmin(p.z, bottom()),
+                      fmax(p.x, near()), fmax(p.y, right()), fmax(p.z, top()));
+        return new_bnd;
+    }
+    
+    bound add_bound(bound b)
+    {
+        return bound(fmin(far(), b.far()),
+                     fmin(left(), b.left()),
+                     fmin(bottom(), b.bottom()),
+                     fmax(near(), b.near()),
+                     fmax(right(), b.right()),
+                          fmax(top(), b.top()));
+    }
+    
+    double diff_if_add_point(point p)
+    {
+        return add_point(p).volume() - volume();
+    }
+    
     double sqdist(pair<double, double> p1, pair<double, double> p2)
     {
         double dx = p1.first - p2.first;
@@ -122,7 +156,7 @@ struct bound
         double minab = fmin(a, b);
         double maxab = fmax(a, b);
         
-        if (minxy > maxab)
+        if (minxy >= maxab)
             return minxy - maxab;
         return minab - maxxy;
     }
@@ -139,9 +173,12 @@ struct bound
         double bz[2][2] = {{bottom(), top()}, {b.bottom(), b.top()}};
         
         
-        is_overlap_x = (is_between(bx[0][0], bx[1][0], bx[1][1])) || (is_between(bx[0][1], bx[1][0], bx[1][1]));
-        is_overlap_y = (is_between(by[0][0], by[1][0], by[1][1])) || (is_between(by[0][1], by[1][0], by[1][1]));
-        is_overlap_z = (is_between(bz[0][0], bz[1][0], bz[1][1])) || (is_between(bz[0][1], bz[1][0], bz[1][1]));
+        is_overlap_x = (is_between(bx[0][0], bx[1][0], bx[1][1])) || (is_between(bx[0][1], bx[1][0], bx[1][1]))
+                    || (is_between(bx[1][0], bx[0][0], bx[0][1])) || (is_between(bx[1][1], bx[0][0], bx[0][1]));
+        is_overlap_y = (is_between(by[0][0], by[1][0], by[1][1])) || (is_between(by[0][1], by[1][0], by[1][1]))
+                    || (is_between(by[1][0], by[0][0], by[0][1])) || (is_between(by[1][1], by[0][0], by[0][1]));
+        is_overlap_z = (is_between(bz[0][0], bz[1][0], bz[1][1])) || (is_between(bz[0][1], bz[1][0], bz[1][1]))
+                    || (is_between(bz[1][0], bz[0][0], bz[0][1])) || (is_between(bz[1][1], bz[0][0], bz[0][1]));
         
         double dx = 0, dy = 0, dz = 0;
         

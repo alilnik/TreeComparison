@@ -11,7 +11,7 @@
 #include "spatial_tree.hpp"
 #include "octree.hpp"
 
-bool test_octree_insert();
+void test_trees();
 
 int main(int argc, const char * argv[]) {
     // insert code here...
@@ -23,7 +23,7 @@ int main(int argc, const char * argv[]) {
     tree->put(point(0.9, 0.2, 0.3), 0.923);
     tree->put(point(0.8, 0.2, 0.3), 0.823);
     
-    test_octree_insert();
+    test_trees();
     
     return 0;
 }

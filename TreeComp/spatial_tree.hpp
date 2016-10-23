@@ -41,7 +41,7 @@ public:
     virtual void put(point p, T obj) = 0;
     
     
-    vector<pair<pair<point, T>, pair<point, T> > > get_neighbors(double distance);
+    virtual vector<pair<pair<point, T>, pair<point, T> > > get_neighbors(double distance);
 };
 
 template <typename T>
