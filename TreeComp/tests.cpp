@@ -14,11 +14,9 @@
 
 #include "octree.hpp"
 #include "r_tree.h"
+#include "kd_tree.h"
 
 using std::vector;
-using std::pair;
-using std::make_pair;
-
 
 vector<pair<point, point> > * manual_search(point * pos, int size, double distance)
 {
@@ -73,7 +71,6 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
     
     int size = 25000;
     double dist = 0.01;
-    
     clock_t time;
     
     printf("%s test: \n", tree_name);
@@ -102,8 +99,6 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
     std::random_shuffle(ints, ints + size);
     
     
-    
-    
     time = clock();
     for (int i = 0; i < size; i++)
     {
@@ -117,8 +112,7 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
     double insert_time = clock() - time;
     printf("Inserting %i elements: %lf msec\n", size, insert_time / CLOCKS_PER_SEC * 1000);
     
-    
-    
+
     if (dynamic_cast<const r_tree_node<int>*>(tree) != 0)
     {
         printf("Yes. Size %i\n", ((r_tree_node<int> *)tree)->get_size());
@@ -143,25 +137,9 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
         printf("Searching %i elements with %i misses: %lf msec\n", size, misses, search_time / CLOCKS_PER_SEC * 1000);
     }
      
-    
-    /*
+
     time = clock();
-    for (int i = 0; i < size; i++)
-    {
-        int tree_int = octree.at(possitions[i]);
-        int obj_int = objects[i];
-        if (tree_int != obj_int)
-        {
-            printf("Error\n");
-            return false;
-        }
-    }
-    double search_time = clock() - time;
-    printf("Searching %i elements: %lf msec\n", size, search_time / CLOCKS_PER_SEC * 1000);
-    */
-    
-    time = clock();
-    auto res = tree->get_neighbors(dist);
+    auto res = tree->get_neighbors(0.001);
     double neighbor_search_time = clock() - time;
     printf("Searching neighbors %i within %lf: %lf msec\n", size, dist, neighbor_search_time / CLOCKS_PER_SEC * 1000);
     
@@ -202,6 +180,49 @@ bool test_octree()
     octree_node<int> octree(bound(0, 0, 0, 1, 1, 1), 100, 100);
     
     return test_tree(&octree, "Octree");
+}
+
+bool test_kd_tree_insert(){
+
+    pair<point, int> * objects;
+    int size = 10000;
+    clock_t time;
+    printf("KD TREE TEST: \n");
+    objects = new pair<point, int>[size];
+    int * ints;
+    ints = new int[size];
+    double gap = (RAND_MAX - 1) * 1.0 / size;
+    double current = 0;
+
+    for (int i = 0; i < size; i++)
+    {
+        ints[i] = (int) current;
+        current += gap;
+
+        if (ints[i] >= RAND_MAX)
+            printf("Rand Err\n");
+    }
+
+    std::random_shuffle(ints, ints + size);
+    kd_tree_node<int> kd(bound(0, 0, 0, 1, 1, 1), 10, 10);
+    point* median = new point(0.5, 0, 0);
+    kd.median = *median;
+
+    time = clock();
+    for (int i = 0; i < size; i++)
+    {
+        int o = rand();
+        point p = point((double) ints[i] / RAND_MAX, (double)rand() / RAND_MAX, (double)rand() / RAND_MAX);
+        kd.put(p, o);
+
+
+    }
+
+    double insert_time = clock() - time;
+    printf("Inserting %i elements: %lf msec\n", size, insert_time / CLOCKS_PER_SEC * 1000);
+
+    return true;
+
 }
 
 
