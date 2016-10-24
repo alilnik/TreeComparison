@@ -139,7 +139,7 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
      
 
     time = clock();
-    auto res = tree->get_neighbors(0.001);
+    auto res = tree->get_neighbors(dist);
     double neighbor_search_time = clock() - time;
     printf("Searching neighbors %i within %lf: %lf msec\n", size, dist, neighbor_search_time / CLOCKS_PER_SEC * 1000);
     
@@ -182,10 +182,19 @@ bool test_octree()
     return test_tree(&octree, "Octree");
 }
 
+bool test_kd()
+{
+
+    kd_tree_node<int> kd(bound(0, 0, 0, 1, 1, 1), 100, 100);
+
+    return test_tree(&kd, "KD-tree");
+}
+
+
 bool test_kd_tree_insert(){
 
     pair<point, int> * objects;
-    int size = 10000;
+    int size = 25000;
     clock_t time;
     printf("KD TREE TEST: \n");
     objects = new pair<point, int>[size];
