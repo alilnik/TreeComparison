@@ -7,12 +7,12 @@
 
 #include <vector>
 #include <algorithm>
-
+#include <iterator>
 #include "spatial_tree.hpp"
 
 const int N = 32;
 const int ct = 1;
-const int cl = 1;
+const int ci = 1;
 
 template <typename T>
 class kd_tree_node: public spatial_tree_node<T>
@@ -32,10 +32,8 @@ private:
     /**
      * Added this functions and vars for kd tree purpose
      */
-    double volume;
-    int calculate_sah(int axis, int num);
+    double surface;
     int max_depth;
-    double calulate_volume();
     point get_median();
 
 
@@ -54,6 +52,11 @@ public:
 
     static bool point_compare (const pair<point, T> x, const pair<point, T> y) { return (x.first.x<y.first.x); }
 
+    void split_sah();
+
+    double k_part_surface(int k, int axis);
+
+    point split_with_sah();
 };
 
 template <typename T>
@@ -73,6 +76,7 @@ kd_tree_node<T>::kd_tree_node(bound bnd, int max_depth, int max_amount_of_object
         children[i] = nullptr;
     objects = new vector<pair<point, T> >();
     is_leaf_node = true;
+    this->surface=bnd.half_surface_area();
 }
 
 template <typename T>
@@ -125,7 +129,7 @@ void kd_tree_node<T>::split()
     bound bnd = this->bnd;
     if (!this->is_leaf_node)
         return;
-    point median = get_median();
+    point median = split_with_sah();
     point p[2] = {
         point(bnd.flb.x, bnd.flb.y, bnd.flb.z),
         point(median.x, bnd.flb.y, bnd.flb.z),
@@ -136,9 +140,6 @@ void kd_tree_node<T>::split()
 
     };
 
-    /**
-     * REVIEW!!!
-     */
     for (int i = 0; i < 2; i++)
     {
         children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
@@ -154,6 +155,15 @@ void kd_tree_node<T>::split()
     this->is_leaf_node = false;
 
 }
+
+template <typename T>
+void kd_tree_node<T>::split_sah()
+{
+    bound bnd = this->bnd;
+    if (!this->is_leaf_node) return;
+
+}
+
 
 template <typename T>
 spatial_tree_node<T> ** kd_tree_node<T>::get_children()
@@ -199,54 +209,99 @@ bool kd_tree_node<T>::is_leaf()
  * @return sah rating
  */
 template <typename T>
-int kd_tree_node<T>::calculate_sah(int axis, int num)
+point kd_tree_node<T>::split_with_sah()
 {
-    double sah = 0;
-    double split_coordinate, volume_l, volume_r, count_l, cout_r = 0;
+    double objects_count[N], leftside_count[N-1], rightside_count[N-1];
+    double sah, temp;
+    point split_point;
+    int axis = 0;
+
     bound bnd = this->bnd;
 
-    volume_l = 1/N*volume;
-    volume_r = volume - volume_r;
 
+    for(pair<point, T> &i: *objects){
+        objects_count[(int)fmod(i.first.x, N)];
+    }
 
-    if (axis == 0){
-        split_coordinate = 1/N*(bnd.flb.x+bnd.nrt.x);
-        for(pair<point, T> &i: *objects){
-            if(i.first.x>=split_coordinate) cout_r++;
-            else count_l++;
+    for(int i = 0; i < N; i++){
+        if(i == 0){
+            leftside_count[i] = objects_count[i];
+            rightside_count[i] = std::accumulate(std::begin(objects_count),std::end(objects_count), 0, std::plus<int>()) - objects_count[i];
+        } else{
+            leftside_count[i] = leftside_count[i-1]+objects_count[i];
+            rightside_count[i] = rightside_count[i-1]-objects_count[i];
         }
     }
-    else if(axis == 1){
-        split_coordinate = 1/N*(bnd.flb.y+bnd.nrt.y);
-        for(pair<point, T> &i: *objects){
-            if(i.first.y>=split_coordinate) cout_r++;
-            else count_l++;
+
+    sah = ct+ci*((k_part_surface(1, axis)*leftside_count[0]+k_part_surface(31, axis))/surface);
+    split_point.set(bnd.flb.x+((bnd.nrt.x-bnd.flb.x)*1/N),bnd.flb.y,bnd.flb.z);
+    for(int i = 1; i < N - 1; i++){
+        temp = ct+ci*((k_part_surface(i+1, axis)*leftside_count[0]+k_part_surface(N-i-1, axis))/surface);
+        if (temp<sah)
+        {
+            sah = temp;
+            split_point.set(bnd.flb.x+((bnd.nrt.x-bnd.flb.x)*(i+1)/N),bnd.flb.y,bnd.flb.z);
         }
     }
-    else if(axis == 2){
-        split_coordinate = 1/N*(bnd.flb.z+bnd.nrt.z);
-        for(pair<point, T> &i: *objects){
-            if(i.first.z>=split_coordinate) cout_r++;
-            else count_l++;
+
+
+
+    axis = 1;
+
+    for(pair<point, T> &i: *objects){
+        objects_count[(int)fmod(i.first.y, N)];
+    }
+
+    for(int i = 0; i < N; i++){
+        if(i == 0){
+            leftside_count[i] = objects_count[i];
+            rightside_count[i] = std::accumulate(std::begin(objects_count),std::end(objects_count), 0, std::plus<int>()) - objects_count[i];
+        } else{
+            leftside_count[i] = leftside_count[i-1]+objects_count[i];
+            rightside_count[i] = rightside_count[i-1]-objects_count[i];
         }
     }
-    else return -1;
+    sah = ct+ci*((k_part_surface(1, axis)*leftside_count[0]+k_part_surface(31, axis))/surface);
+    split_point.set(bnd.flb.x,bnd.flb.y+((bnd.nrt.y-bnd.flb.y)*1/N),bnd.flb.z);
+    for(int i = 1; i < N - 1; i++){
+        temp = ct+ci*((k_part_surface(i+1, axis)*leftside_count[0]+k_part_surface(N-i-1, axis))/surface);
+        if (temp<sah){
+            sah = temp;
+            split_point.set(bnd.flb.x, bnd.flb.y+((bnd.nrt.y-bnd.flb.y)*(i+1)/N), bnd.flb.z);
+        }
+    }
 
-    sah = ct + cl*((volume_l*count_l+volume_r*cout_r)/volume);
 
-    return sah;
+
+
+    axis = 2;
+    for(pair<point, T> &i: *objects){
+        objects_count[(int)fmod(i.first.z, N)];
+    }
+
+    for(int i = 0; i < N; i++){
+        if(i == 0){
+            leftside_count[i] = objects_count[i];
+            rightside_count[i] = std::accumulate(std::begin(objects_count),std::end(objects_count), 0, std::plus<int>()) - objects_count[i];
+        } else{
+            leftside_count[i] = leftside_count[i-1]+objects_count[i];
+            rightside_count[i] = rightside_count[i-1]-objects_count[i];
+        }
+    }
+    sah = ct+ci*((k_part_surface(1, axis)*leftside_count[0]+k_part_surface(31, axis))/surface);
+    split_point.set(bnd.flb.x, bnd.flb.y, bnd.flb.z+((bnd.nrt.z-bnd.flb.z)*1/N));
+    for(int i = 1; i < N - 1; i++){
+        temp = ct+ci*((k_part_surface(i+1, axis)*leftside_count[0]+k_part_surface(N-i-1, axis))/surface);
+        if (temp<sah)
+        {
+            sah = temp;
+            split_point.set(bnd.flb.x, bnd.flb.y, bnd.flb.z+((bnd.nrt.z-bnd.flb.z)*(i+1)/N));
+        }
+    }
+
+    return split_point;
 }
 
-
-
-/**
- * calculates volume of the box
- * @return volume
- */
-template <typename T>
-double kd_tree_node<T>::calulate_volume() {
-    return (this->bnd.nrt.x-this->bnd.flb.x)*(this->bnd.nrt.y-this->bnd.flb.y)*(this->bnd.nrt.z-this->bnd.flb.z);
-}
 
 
 /**
@@ -259,6 +314,20 @@ point kd_tree_node<T>::get_median() {
     std::sort(sorted->begin(), sorted->end(), point_compare);
     this->median = sorted->at(sorted->size()/2).first;
     return sorted->at(sorted->size()/2).first;
+}
+
+template <typename T>
+double kd_tree_node<T>::k_part_surface(int k, int axis){
+    if(axis == 0){
+        return this->surface-k/N*(this->bnd.height()*this->bnd.length())-k/N*(this->bnd.width()*this->bnd.length());
+    } else if (axis == 1)
+    {
+        return this->surface-k/N*(this->bnd.height()*this->bnd.width())-k/N*(this->bnd.width()*this->bnd.length());
+    }
+    else if(axis == 2)
+    {
+        return this->surface-(k/N*(this->bnd.height()*this->bnd.width())+k/N*(this->bnd.height()*this->bnd.length()));
+    } else return  -1;
 }
 
 

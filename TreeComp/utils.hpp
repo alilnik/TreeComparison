@@ -12,6 +12,7 @@
 #include <cmath>
 #include <utility>
 
+
 using std::pair;
 using std::make_pair;
 
@@ -31,6 +32,12 @@ public:
     double length()
     {
         return sqrt(x * x + y * y + z * z);
+    }
+
+    void set(double x, double y, double z){
+        this->x = x;
+        this->y = y;
+        this->z = z;
     }
     
     void normalize()
@@ -228,6 +235,26 @@ struct bound
     double bottom()
     {
         return flb.z;
+    }
+
+    double length()
+    {
+        return nrt.x-flb.x;
+    }
+
+    double width()
+    {
+        return nrt.y-flb.y;
+    }
+
+    double height()
+    {
+        return nrt.z-flb.z;
+    }
+
+    double half_surface_area()
+    {
+        return width()*length()+height()*length()+width()*height();
     }
 };
 

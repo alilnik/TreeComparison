@@ -182,10 +182,19 @@ bool test_octree()
     return test_tree(&octree, "Octree");
 }
 
+bool test_kd()
+{
+
+    kd_tree_node<int> kd(bound(0, 0, 0, 1, 1, 1), 100, 100);
+
+    return test_tree(&kd, "KD-tree");
+}
+
+
 bool test_kd_tree_insert(){
 
     pair<point, int> * objects;
-    int size = 10000;
+    int size = 25000;
     clock_t time;
     printf("KD TREE TEST: \n");
     objects = new pair<point, int>[size];
