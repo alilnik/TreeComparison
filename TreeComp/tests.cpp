@@ -69,7 +69,7 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
     int * objects;
     point * possitions;
     
-    int size = 25000;
+    int size = 2500;
     double dist = 0.01;
     clock_t time;
     
@@ -139,7 +139,7 @@ bool test_tree(spatial_tree_node<int> * tree, char * tree_name)
      
 
     time = clock();
-    auto res = tree->get_neighbors(0.001);
+    auto res = tree->get_neighbors(dist);
     double neighbor_search_time = clock() - time;
     printf("Searching neighbors %i within %lf: %lf msec\n", size, dist, neighbor_search_time / CLOCKS_PER_SEC * 1000);
     
