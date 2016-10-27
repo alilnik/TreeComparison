@@ -22,11 +22,11 @@ class spatial_tree_node
 {
 protected:
     bound bnd;
+    
 private:
     virtual spatial_tree_node<T> ** get_children() = 0;
     virtual int get_children_size() = 0;
     virtual vector<pair<point, T> > * get_objects() = 0;
-    
     static void get_neighbors_(
                                spatial_tree_node<T> * A,
                                spatial_tree_node<T> * B, 
@@ -42,7 +42,7 @@ public:
     virtual void put(point p, T obj) = 0;
     
     
-    virtual vector<pair<pair<point, T>, pair<point, T> > > get_neighbors(double distance);
+    virtual vector<pair<pair<point, T>, pair<point, T> > > * get_neighbors(double distance);
 };
 
 template <typename T>
@@ -52,10 +52,10 @@ bound spatial_tree_node<T>::get_bound()
 }
 
 template <typename T>
-vector<pair<pair<point, T>, pair<point, T> > > spatial_tree_node<T>::get_neighbors(double distance)
+vector<pair<pair<point, T>, pair<point, T> > > * spatial_tree_node<T>::get_neighbors(double distance)
 {
-    vector<pair<pair<point, T>, pair<point, T> > > result;
-    get_neighbors_(this, this, distance * distance, &result);
+    vector<pair<pair<point, T>, pair<point, T> > > * result = new vector<pair<pair<point, T>, pair<point, T> > >();
+    get_neighbors_(this, this, distance * distance, result);
     return result;
 }
 
@@ -98,10 +98,11 @@ void spatial_tree_node<T>::get_neighbors_(
         spatial_tree_node<T> ** a_nodes, ** b_nodes;
         bool a_allocated = false, b_allocated = false;
         int a_size = 0, b_size = 0;
+        spatial_tree_node<T> * fake_a[] = {A};
+        spatial_tree_node<T> * fake_b[] = {B};
         if (A->is_leaf())
         {
-            a_nodes = new spatial_tree_node<T>*[1];
-            a_nodes[0] = A;
+            a_nodes = fake_a;
             a_size = 1;
             a_allocated = true;
         }
@@ -109,12 +110,12 @@ void spatial_tree_node<T>::get_neighbors_(
         {
             a_nodes = A->get_children();
             a_size = A->get_children_size();
+            a_allocated = false;
         }
         
         if (B->is_leaf())
         {
-            b_nodes = new spatial_tree_node<T>*[1];
-            b_nodes[0] = B;
+            b_nodes = fake_b;
             b_size = 1;
             b_allocated = true;
         }
@@ -122,6 +123,7 @@ void spatial_tree_node<T>::get_neighbors_(
         {
             b_nodes = B->get_children();
             b_size = B->get_children_size();
+            b_allocated = false;
         }
         
         bool is_same = A == B;
@@ -135,13 +137,6 @@ void spatial_tree_node<T>::get_neighbors_(
                 }
             }
         }
-        
-        if (a_allocated)
-            delete[] a_nodes;
-        
-        if (b_allocated)
-            delete[] b_nodes;
-        
     }
 }
 

@@ -29,9 +29,9 @@ int main(int argc, const char * argv[]) {
     kd.put(point(0.9, 0.2, 0.3), 0.923);
     kd.put(point(0.8, 0.2, 0.3), 0.823);*/
 
-    test_kd();
+    //test_kd();
     //test_kd_tree_insert();
-    //test_trees();
+    test_trees();
     //test_octree_insert();
 
     //test_kd_tree_insert();

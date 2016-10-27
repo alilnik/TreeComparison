@@ -60,7 +60,7 @@ public:
     T * at(point p);
     int get_size();
     
-    virtual vector<pair<pair<point, T>, pair<point, T> > > get_neighbors(double distance);
+    virtual vector<pair<pair<point, T>, pair<point, T> > > * get_neighbors(double distance);
 };
 
 template <typename T>
@@ -301,7 +301,7 @@ int r_tree_node<T>::get_children_size()
 
 
 template <typename T>
-vector<pair<pair<point, T>, pair<point, T> > > r_tree_node<T>::get_neighbors(double distance)
+vector<pair<pair<point, T>, pair<point, T> > > * r_tree_node<T>::get_neighbors(double distance)
 {
     if (parent != nullptr)
         return get_root()->get_neighbors(distance);;

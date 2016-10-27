@@ -7,7 +7,9 @@
 
 #include <vector>
 #include <algorithm>
+#include <functional>
 #include <iterator>
+#include <numeric> 
 #include "spatial_tree.hpp"
 
 const int N = 32;
