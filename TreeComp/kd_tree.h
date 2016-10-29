@@ -66,9 +66,13 @@ public:
 
     kd_tree_node(bound bnd, int max_depth, int max_amount_of_objects);
 
+    kd_tree_node(bound bnd, int max_depth, int max_amount_of_objects, int split); //0-mediana xyz, 1-mediana x, 2 - center, 3-sah
+
     ~kd_tree_node();
 
     point median;
+
+    int split_;
 
     T at(point p);
 
@@ -117,6 +121,22 @@ kd_tree_node<T>::kd_tree_node(bound bnd, int max_depth, int max_amount_of_object
 }
 
 template <typename T>
+kd_tree_node<T>::kd_tree_node(bound bnd, int max_depth, int max_amount_of_objects, int split)
+{
+    this->bnd = bnd;
+    this->is_leaf_node = true;
+    this->max_depth = max_depth;
+    this->max_amount_of_objects = max_amount_of_objects;
+    for (int i = 0; i < 2; i++)
+        children[i] = nullptr;
+    objects = new vector<pair<point, T> >();
+    is_leaf_node = true;
+    this->surface=bnd.half_surface_area();
+    this->axis = 0;
+    this->split_ = split;
+}
+
+template <typename T>
 kd_tree_node<T>::~kd_tree_node()
 {
     for (int i = 0; i < 2; i++)
@@ -150,7 +170,24 @@ void kd_tree_node<T>::put(point p, T obj)
 
         } else {
             // Split
-            split_on_single_x_median();
+            switch ( split_)
+            {
+                case 0:
+                    split();
+                    break;
+                case 1:
+                    split_on_single_x_median();
+                    break;
+                case 2:
+                    split_with_center();
+                    break;
+                case 3:
+                    split_with_sah();
+                    break;
+                default:
+                    split();
+                    break;
+            }
             put(p, obj);
         }
     } else {
@@ -212,7 +249,7 @@ void kd_tree_node<T>::split()
 
     for (int i = 0; i < 2; i++)
     {
-        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
+        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects, split_);
         children[i]->axis = (axis+1)%3;
     }
 
@@ -252,7 +289,7 @@ void kd_tree_node<T>::split_on_single_x_median()
 
     for (int i = 0; i < 2; i++)
     {
-        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
+        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects, split_);
     }
 
     for (int i = 0; i < objects->size(); i++)
@@ -318,7 +355,7 @@ void kd_tree_node<T>::split_with_sah()
 
     for (int i = 0; i < 2; i++)
     {
-        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
+        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects, split_);
     }
 
     for (int i = 0; i < objects->size(); i++)
@@ -386,7 +423,7 @@ void kd_tree_node<T>::split_with_center()
 
     for (int i = 0; i < 2; i++)
     {
-        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
+        children[i] = new kd_tree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects, split_);
         children[i]->axis = (axis+1)%3;
     }
 
