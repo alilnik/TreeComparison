@@ -40,7 +40,7 @@ public:
     bound get_bound();
     virtual bool is_leaf() = 0;
     virtual void put(point p, T obj) = 0;
-    
+
     
     virtual vector<pair<pair<point, T>, pair<point, T> > > * get_neighbors(double distance);
 };
@@ -98,11 +98,10 @@ void spatial_tree_node<T>::get_neighbors_(
         spatial_tree_node<T> ** a_nodes, ** b_nodes;
         bool a_allocated = false, b_allocated = false;
         int a_size = 0, b_size = 0;
-        spatial_tree_node<T> * fake_a[] = {A};
-        spatial_tree_node<T> * fake_b[] = {B};
         if (A->is_leaf())
         {
-            a_nodes = fake_a;
+            a_nodes = new spatial_tree_node<T> *[1];
+            a_nodes[0] = A;
             a_size = 1;
             a_allocated = true;
         }
@@ -115,7 +114,8 @@ void spatial_tree_node<T>::get_neighbors_(
         
         if (B->is_leaf())
         {
-            b_nodes = fake_b;
+            b_nodes = new spatial_tree_node<T> *[1];
+            b_nodes[0] = B;
             b_size = 1;
             b_allocated = true;
         }

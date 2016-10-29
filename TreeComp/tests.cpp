@@ -239,18 +239,23 @@ void compare_trees()
 {
     int * objects;
     point * possitions;
-    int sizes[] = {1000, 10000, 100000};
-    double distances[] = {10e-3, 10e-5};
-    int number_of_tries = 1;
+    int sizes[] = {1000, 10000, 100000, 1000000, 10000000};
+    double distances[] = {10e-4, 10e-6};
+    int number_of_tries = 5;
     
     clock_t time;
     
     // Insert name here!
-    char * names[] = {"Octree ", "Kd-tree"};
+    char * names[] = {"Octree(10, 100)   ", "Octree(100, 100)  ", "Octree(1000, 100) "
+                    , "Octree(10, 1000)  ", "Octree(100, 1000) ", "Octree(1000, 1000)"
+                    , "Kd-tree(10, 100)  ", "Kd-tree(100, 100) ", "Kd-tree(1000, 100)"
+                    , "Kd-tree(10, 1000)  ", "Kd-tree(100, 1000) ", "Kd-tree(1000, 1000)"
+    //                , "R-tree(5)         ", "R-tree(25)        ", "R-tree(125)       "
+    };
     int size = sizeof(names) / sizeof(names[0]);
-    
+    int dist_x_size = size * (sizeof(distances) / sizeof(double));
     double * insertion_time = new double[size];
-    double * searching_time = new double[size * sizeof(distances) / sizeof(double)];
+    double searching_time[1000] = {0.0};
     
     
     for (int q = 0; q < sizeof(sizes) / sizeof(sizes[0]); q++)
@@ -275,9 +280,23 @@ void compare_trees()
             
             
             // Insert your tree here
-            spatial_tree_node<int> * tree[] = {new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 10, 100),
-                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 100, 100)
-                /*new r_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 5, nullptr)*/};
+            spatial_tree_node<int> * tree[] = {
+                new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 10, 100),
+                new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 100, 100),
+                new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 1000, 100),
+                new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 10, 1000),
+                new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 100, 1000),
+                new octree_node<int>(bound(0, 0, 0, 1, 1, 1), 1000, 1000),
+                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 10, 100),
+                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 100, 100),
+                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 1000, 100),
+                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 10, 1000),
+                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 100, 1000),
+                new kd_tree_node<int>(bound(0, 0, 0, 1, 1, 1), 1000, 1000)
+                //new r_tree<int>(5),
+                //new r_tree<int>(25),
+                //new r_tree<int>(125)
+            };
             
             
             for (int i = 0; i < sizes[q]; i++)
@@ -310,7 +329,8 @@ void compare_trees()
                 for (int j = 0; j < sizeof(distances) / sizeof(double); j++)
                 {
                     time = clock();
-                    auto result = tree[i]->get_neighbors(distances[j]);
+                    spatial_tree_node<int> * t = tree[i];
+                    auto result = t->get_neighbors(distances[j]);
                     double search_time = clock() - time;
                     searching_time[size * i + j] += search_time / CLOCKS_PER_SEC;
                     delete result;
@@ -318,7 +338,10 @@ void compare_trees()
             }
             
             for (int i = 0; i < size; i++)
-                delete tree[i];
+            {
+                spatial_tree_node<int> * t = tree[i];
+                delete t;
+            }
             delete[] rand_double;
             delete[] objects;
             delete[] possitions;
@@ -331,7 +354,7 @@ void compare_trees()
             printf("Inserting in %lf msec\n", insertion_time[i] * 1000 / number_of_tries);
             printf("Searching within the distance:\n");
             for (int j = 0; j < sizeof(distances) / sizeof(double); j++)
-                printf("  %lf in %lf msec\n", distances[j], searching_time[size * i + j] / number_of_tries);
+                printf("  %lf in %lf msec\n", distances[j], searching_time[size * i + j] * 1000 / number_of_tries);
             printf("====================\n");
         }
 
@@ -339,7 +362,7 @@ void compare_trees()
 
     
     delete[] insertion_time;
-    delete[] searching_time;
+    //delete[] searching_time;
 }
 
 

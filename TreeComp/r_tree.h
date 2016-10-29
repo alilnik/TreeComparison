@@ -17,10 +17,14 @@
 using std::vector;
 using std::make_pair;
 
+
+
 template <typename T>
 class r_tree_node: public spatial_tree_node<T>
 {
 private:
+    //friend r_tree;
+    
     bool is_leaf_node;
     
     int min_amount_of_objects;
@@ -44,7 +48,7 @@ private:
     void rebuild(r_tree_node<T> * other);
     void put_(point p, T obj);
     
-    r_tree_node<T> * get_root();
+    
     
     int size_();
     T * at_(point p);
@@ -59,6 +63,7 @@ public:
     virtual void put(point p, T obj);
     T * at(point p);
     int get_size();
+    r_tree_node<T> * get_root();
     
     virtual vector<pair<pair<point, T>, pair<point, T> > > * get_neighbors(double distance);
 };
@@ -94,10 +99,12 @@ template <typename T>
 r_tree_node<T>::~r_tree_node()
 {
     if (children != nullptr)
+    {
         for (int i = 0; i < max_amount_of_objects; i++)
             if (children[i] != nullptr)
                 delete children[i];
-    delete children;
+        delete[] children;
+    }
     children = nullptr;
     if (objects != nullptr)
     {
@@ -353,6 +360,47 @@ T * r_tree_node<T>::at_(point p)
             }
     }
     return nullptr;
+}
+
+
+/*
+ * r_tree class created to avoid problems with storing non root element as a r_tree_node
+ */
+template <typename T>
+class r_tree: public r_tree_node<T>
+{
+private:
+    r_tree_node<T> * node;
+    
+    virtual spatial_tree_node<T> ** get_children() {return nullptr;}
+    virtual int get_children_size() {return 0;}
+    virtual vector<pair<point, T> > * get_objects() {return nullptr;}
+public:
+    r_tree<T>(int min_amount_of_objects);
+    ~r_tree<T>();
+    virtual bool is_leaf() {return node->is_leaf();}
+    virtual void put(point p, T obj) {node->get_root()->put(p, obj);}
+    virtual vector<pair<pair<point, T>, pair<point, T> > > * get_neighbors(double distance);
+};
+
+template <typename T>
+r_tree<T>::r_tree(int min_amount_of_objects)
+{
+    node = new r_tree_node<T>(bound(0, 0, 0, 0, 0, 0), min_amount_of_objects, nullptr);
+}
+
+template <typename T>
+r_tree<T>::~r_tree()
+{
+    //r_tree_node<T> * root = node->get_root();
+    //node = nullptr;
+    //delete root;
+}
+
+template <typename T>
+vector<pair<pair<point, T>, pair<point, T> > > * r_tree<T>::get_neighbors(double distance)
+{
+    return node->get_root()->get_neighbors(distance);
 }
 
 #endif /* r_tree_h */

@@ -72,13 +72,15 @@ octree_node<T>::octree_node(bound bnd, int max_depth, int max_amount_of_objects)
 template <typename T>
 octree_node<T>::~octree_node()
 {
-    for (int i = 0; i < 8; i++)
-        if (children[i] != nullptr)
-        {
-            delete children[i];
-            children[i] = nullptr;
-        }
-    
+    if (!is_leaf())
+    {
+        for (int i = 0; i < 8; i++)
+            if (children[i] != nullptr)
+            {
+                delete children[i];
+                children[i] = nullptr;
+            }
+    }
     if (objects != nullptr)
     {
         delete objects;
@@ -145,8 +147,6 @@ void octree_node<T>::split()
     
     for (int i = 0; i < 8; i++)
     {
-        if (e[i].z == p[i].z)
-            printf("!");
         children[i] = new octree_node<T>(bound(p[i], e[i]), max_depth - 1, max_amount_of_objects);
     }
     
